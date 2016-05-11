@@ -39,8 +39,6 @@ target_link_libraries(test_quad2dof_node
 )
 
 
-
-
 add_executable(quad2dof_node src/ode_simulator_node.cpp src/quad2dof/odefun.c src/MatrixLite.c)
 target_include_directories(quad2dof_node PRIVATE src/quad2dof)
 target_link_libraries(quad2dof_node ${Boost_LIBRARIES} ${EIGEN3_LIBRARIES} ${catkin_LIBRARIES})

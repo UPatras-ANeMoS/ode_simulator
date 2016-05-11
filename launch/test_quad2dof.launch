@@ -1,7 +1,7 @@
 <launch>
+    <node name="test_quad2dof" pkg="ode_simulator" type="test_quad2dof_node"/>
     <node name="quad2dof" pkg="ode_simulator" type="quad2dof_node">
         <param name="_u" value="u"/>
-    </node>
-    <node name="test_quad2dof" pkg="ode_simulator" type="test_quad2dof_node"/>
-    <node name="rqt_plot" pkg="rqt_plot" type="rqt_plot" args="/x/data[0] x/data[2] x/data[4]" />
+    </node>    
+    <node name="rqt_plot" pkg="rqt_plot" type="rqt_plot" args="/x/data[0] x/data[2] x/data[4] x/data[12] x/data[14]" />
 </launch>

@@ -1836,7 +1836,7 @@ SMElement * SMContextScanFirstElement(SMContext * obj, SMSubString *data)
     // Scientific constant
     if (tmp.len && data->len &&
         isdigit(tmp.data[0]) &&
-        tmp.data[tmp.len-1] == 'e' &&
+        (tmp.data[tmp.len-1] == 'e' || tmp.data[tmp.len-1] == 'E') &&
         (data->data[0] == '-' ||
          data->data[0] == '+' ))
     {
@@ -2092,7 +2092,7 @@ CTResult SMContextLoadFromString(SMContext * obj, SMString *str)
 CTResult SMContextLoadFromSubString(SMContext * obj, SMSubString subStr)
 {
     SMSubString tmp;
-    
+    SMSubStringRemoveSurroundingWhiteSpace(&subStr);
     do {
         tmp = SMSubStringScanUpBeforeFirstUngroupedCharInStr(&subStr, "\n");
         SMSubStringRemoveSurroundingWhiteSpace(&subStr);

@@ -1,0 +1,337 @@
+/* [wxMaxima batch file version 1] [ DO NOT EDIT BY HAND! ]*/
+/* [ Created with wxMaxima version 14.12.1 ] */
+
+/* [wxMaxima: input   start ] */
+load("vect");
+ratprint:false$
+elapsed_real_time();
+
+
+param:0$
+
+
+if (param=1) then (
+    n : 2,
+    m_(u):=concat(m,u),
+    l_(u):=concat(l,u),
+    q_(u):=concat(q,u),
+    qd_(u):=concat(qd,u),
+    qdd_(u):=concat(qdd,u),
+    lcx_(u):=concat(lcx,u),
+    lcy_(u):=concat(lcy,u),
+    lcz_(u):=concat(lcz,u),
+    Ixx_(u):=concat(Ixx,u),
+    Iyy_(u):=concat(Iyy,u),
+    Izz_(u):=concat(Izz,u),
+    Ixy_(u):=concat(Ixy,u),
+    Iyz_(u):=concat(Iyz,u),
+    Ixz_(u):=concat(Ixz,u)
+)
+else
+(
+    s : openr("P_arm.txt"),
+    Par : read_matrix(s, comma),
+    Par:transpose(Par),
+    n: length(Par[1]),
+
+    m_(u):=Par[5,u],
+    l_(u):=Par[3,u],
+    q_(u):=Par[1,u],
+    qd_(u):=concat(Par[1,u],"d"),
+    lcx_(u):=Par[6,u],
+    lcy_(u):=Par[7,u],
+    lcz_(u):=Par[8,u],
+    Ixx_(u):=Par[9,u],
+    Iyy_(u):=Par[10,u],
+    Izz_(u):=Par[11,u],
+    Ixy_(u):=Par[12,u],
+    Iyz_(u):=Par[14,u],
+    Ixz_(u):=Par[13,u],    
+    zcog:-0.0002,
+    s2: openr("P_uav.txt"),
+    Par_uav : read_matrix(s2, comma),
+    m:Par_uav[1,1],
+    Ix:Par_uav[1,4],
+    Iy:Par_uav[1,5],
+    Iz:Par_uav[1,6],
+    la:Par_uav[1,2],
+    g:Par_uav[1,3],
+)$
+
+tau_(u):=concat(tau,u)$
+
+s_tr:transpose(matrix([lcx_(1),lcy_(1),lcz_(1)]))$
+DH : matrix ([q_(1), 0, l_(1), 0])$
+
+
+
+
+for i:2 thru n  do
+    (DH:addrow(DH,[q_(i), 0, l_(i), 0]),
+     s_tr:addcol(s_tr,[[lcx_(i)],[lcy_(i)],[lcz_(i)]]))$
+
+
+
+
+
+
+k:1$
+p : matrix([DH[k, 3]],[ DH[k, 2]*sin(DH[k, 4])],[ DH[k, 2]*cos(DH[k, 4])])$
+for i:2 thru n  do
+    (k:k+1,p:addcol(p,[DH[k, 3], DH[k, 2]*sin(DH[k, 4]), DH[k, 2]*cos(DH[k, 4])]))$
+
+ct:cos(theta)$
+st:sin(theta)$
+cc:cos(psi)$
+sc:sin(psi)$
+cf:cos(phi)$
+sif:sin(phi)$
+REB : matrix([cos(theta)*cos(psi), sin(phi)*sin(theta)*cos(psi)-cos(phi)*sin(psi), cos(phi)*sin(theta)*cos(psi)+sin(phi)*sin(psi)],
+    [cos(theta)*sin(psi), sin(phi)*sin(theta)*sin(psi)+cos(phi)*cos(psi), cos(phi)*sin(theta)*sin(psi)-sin(phi)*cos(psi)],
+    [-sin(theta), sin(phi)*cos(theta), cos(phi)*cos(theta)])$
+RBO : transpose(matrix([0, 1, 0],[ 0, 0, 1],[ 1, 0, 0]))$
+REO : (REB.RBO)$
+z0 : transpose(matrix([0, 0, 1]))$
+k:1$
+R_rne: matrix([cos(DH[k,1]), -cos(DH[k,4])*sin(DH[k,1]), sin(DH[k,4])*sin(DH[k,1])],
+    [sin(DH[k,1]), cos(DH[k,4])*cos(DH[k,1]), -sin(DH[k,4])*cos(DH[k,1])],
+    [0, sin(DH[k,4]), cos(DH[k,4])])$
+
+for i:2 thru n  do
+    (k:k+1,R_rne:addcol(R_rne,[cos(DH[k,1]),sin(DH[k,1]), 0],
+    [ -cos(DH[k,4])*sin(DH[k,1]), cos(DH[k,4])*cos(DH[k,1]),sin(DH[k,4]) ],
+    [sin(DH[k,4])*sin(DH[k,1]), -sin(DH[k,4])*cos(DH[k,1]), cos(DH[k,4])]))$
+R_rne:addcol(R_rne,[1,0,0],[0,1,0],[0,0,1])$
+
+
+
+k:1$
+I_rne: matrix([Ixx_(1),Ixy_(1),Ixz_(1)],
+    [Ixy_(1),Iyy_(1),Iyz_(1)],
+    [Ixz_(1),Iyz_(1),Izz_(1)])$
+
+for i:2 thru n  do
+    (k:k+1,I_rne:addcol(I_rne,  [Ixx_(i),Ixy_(i),Ixz_(i)],
+                                [Ixy_(i),Iyy_(i),Iyz_(i)],
+                                [Ixz_(i),Iyz_(i),Izz_(i)]))$
+
+
+
+
+Omega0_tr : transpose(RBO).transpose(matrix(([wx, wy, wz])))$
+Omegad0_tr : transpose(RBO).transpose(matrix(([wxd, wyd, wzd])))$
+
+Upsilon0_tr : transpose(REO).transpose(matrix(([vx, vy, vz])))$
+Upsilond0_tr : transpose(REO).transpose(matrix(([vxd, vyd, vzd+g])))$
+
+pstar_tr:p$
+
+k:0$
+
+qww:transpose(R_rne)$
+t:matrix(qww[1])$
+t:addrow(t,qww[2])$
+t:addrow(t,qww[3])$
+
+k:1$
+
+Omega_tr:t.(Omega0_tr+qd_(k)*z0)$
+    Omega0_tr_list : args (Omega0_tr)$
+    Omega_tr_list : args (col(Omega_tr,1))$
+    pstar_list : args (col(pstar_tr,1))$
+    s_tr_list : args (col(s_tr,1))$
+    z0_qd_list : args (z0*qd_(k))$
+Omegad_tr: t.(Omegad0_tr+z0*qdd(k)+express(Omega0_tr_list~z0_qd_list))$
+    Omegad_tr_list : args (Omegad_tr)$
+Upsilond_tr: t.Upsilond0_tr+express(Omegad_tr_list~pstar_list)+express(Omega_tr_list~express(Omega_tr_list~pstar_list))$
+Alpha_tr : Upsilond_tr+express(Omegad_tr_list~s_tr_list)+express(Omega_tr_list~express(Omega_tr_list~s_tr_list))$
+
+k:0$
+for i:2 thru n do
+(
+    k:k+1,
+
+    qww:transpose(R_rne),
+    t:matrix(qww[1+3*k]),
+    t:addrow(t,qww[2+3*k]),
+    t:addrow(t,qww[3+3*k]),
+
+    
+    Omega_tr_temp:t.(col(Omega_tr,k)+qd_(i)*z0),
+    Omega_tr:addcol(Omega_tr,Omega_tr_temp),
+
+
+
+
+    
+        Omega_tr_list : args (col(Omega_tr,k)),
+        pstar_list : args (col(pstar_tr,i)),
+        s_tr_list : args (col(s_tr,i)),
+        z0_qd_list : args (z0*qd_(i)),
+    Omegad_tr_temp: t.(col(Omegad_tr,k)+z0.qdd(i)+express(Omega_tr_list~z0_qd_list)),
+    Omegad_tr:addcol(Omegad_tr,Omegad_tr_temp),
+
+        Omegad_tr_list : args (Omegad_tr_temp),
+        Omega_tr_list : args (col(Omega_tr,i)),
+    Upsilond_tr_temp: t.col(Upsilond_tr,k)+express(Omegad_tr_list~pstar_list)+express(Omega_tr_list~express(Omega_tr_list~pstar_list)),
+    Upsilond_tr:addcol(Upsilond_tr,Upsilond_tr_temp),
+
+    Alpha_tr_temp : col(Upsilond_tr,i)+express(Omegad_tr_list~s_tr_list)+express(Omega_tr_list~express(Omega_tr_list~s_tr_list)),
+    Alpha_tr:addcol(Alpha_tr,Alpha_tr_temp))$
+
+Etaend_tr : transpose([0, 0, 0])$
+Effend_tr : transpose([0, 0, 0])$
+k:n$
+qww:transpose(R_rne)$
+t:matrix(qww[1+3*k])$
+t:addrow(t,qww[2+3*k])$
+t:addrow(t,qww[3+3*k])$
+t:transpose(t)$
+
+qww:transpose(R_rne)$
+t_1:matrix(qww[1+3*(k-1)])$
+t_1:addrow(t_1,qww[2+3*(k-1)])$
+t_1:addrow(t_1,qww[3+3*(k-1)])$
+t_1:transpose(t_1)$
+
+
+qww:transpose(I_rne)$
+It:matrix(qww[1+3*(k-1)])$
+It:addrow(It,qww[2+3*(k-1)])$
+It:addrow(It,qww[3+3*(k-1)])$
+
+
+
+
+Eff_tr: t.Effend_tr+m_(k)*col(Alpha_tr,k)$
+
+    Effend_tr_list : args (Effend_tr)$
+    tran_t_pstar_list : args (col(transpose(t).pstar_tr,k))$
+    pstar_tr_s_tr_list : args (col(pstar_tr+s_tr,k))$
+    m_alpha_list : args (m_(k)*col(Alpha_tr,k))$
+    Omega_tr_list : args (col(Omega_tr,k))$
+    I_Omega_tr_list : args (col(It.Omega_tr,k))$
+Eta_tr: t.(Etaend_tr+express(tran_t_pstar_list~Effend_tr_list))+express(pstar_tr_s_tr_list~m_alpha_list)+It.col(Omegad_tr,k)+express(Omega_tr_list~I_Omega_tr_list)$
+Tau_tr:matrix()$
+Tau_tr_temp: transpose(Eta_tr).(transpose(t_1).z0)$
+Tau_tr:addcol(Tau_tr,Tau_tr_temp)$
+
+for i:2 thru n do
+(
+
+    k:k-1,
+    qww:transpose(R_rne),
+    t:matrix(qww[1+3*k]),
+    t:addrow(t,qww[2+3*k]),
+    t:addrow(t,qww[3+3*k]),
+    t:transpose(t),
+    Eff_tr_temp : t.col(Eff_tr,i-1)+m_(k)*col(Alpha_tr,k),
+    Eff_tr:addcol(Eff_tr,Eff_tr_temp),
+
+        qww:transpose(I_rne),
+        It:matrix(qww[1+3*(k-1)]),
+        It:addrow(It,qww[2+3*(k-1)]),
+        It:addrow(It,qww[3+3*(k-1)]),
+    Effend_tr_list : args (col(Eff_tr,i-1)),
+      tran_t_pstar_list : args (col(transpose(t).pstar_tr,k)),
+      pstar_tr_s_tr_list : args (col(pstar_tr+s_tr,k)),
+      m_alpha_list : args (m_(k)*col(Alpha_tr,k)),
+      Omega_tr_list : args (col(Omega_tr,k)),
+      I_Omega_tr_list : args (col(It.Omega_tr,k)),
+    Eta_tr_temp: t.(col(Eta_tr,i-1)+express(tran_t_pstar_list~Effend_tr_list))+express(pstar_tr_s_tr_list~m_alpha_list)+It.col(Omegad_tr,k)+express(Omega_tr_list~I_Omega_tr_list),
+    Eta_tr:addcol(Eta_tr,Eta_tr_temp),
+    qww:transpose(R_rne),
+    t_1:matrix(qww[1+3*(k-1)]),
+    t_1:addrow(t_1,qww[2+3*(k-1)]),
+    t_1:addrow(t_1,qww[3+3*(k-1)]),
+    t_1:transpose(t_1),
+    Tau_tr_temp: transpose(Eta_tr_temp).(transpose(t_1).z0),
+    Tau_tr:addcol(Tau_tr,Tau_tr_temp)
+    )$
+
+
+qww:transpose(R_rne)$
+t:matrix(qww[1])$
+t:addrow(t,qww[2])$
+t:addrow(t,qww[3])$
+t:transpose(t)$
+Eff_evO: t.Eff_tr_temp$
+Eta_evO: t.Eta_tr_temp$
+
+
+t_cog:args(RBO.Eff_evO)$
+n_cog:express([0,0,zcog]~t_cog)$
+
+f0:REO.Eff_evO$
+n0:RBO.Eta_evO+n_cog$
+
+tauEL:transpose(Tau_tr)$
+elapsed_real_time();
+Xdd:matrix([vxd,vyd,vzd,wxd,wyd,wzd])$
+for i:1 thru n do
+    Xdd:addcol(Xdd,[qdd(i)])$
+D:matrix()$
+
+fnt:f0$
+fnt:addrow(fnt,n0)$
+for i:1 thru n do
+    fnt:addrow(fnt,tauEL[n-i+1])$
+
+for k:1 thru length(Xdd[1]) do
+   (Drow:matrix(),
+    for i:1 thru length(Xdd[1]) do
+        Drow:addcol(Drow,[trigsimp(ratcoef(fnt[k,1],Xdd[1,i]))]),
+    D:addrow(D,Drow))$
+
+
+
+Dquad:zeromatrix(6+n,6+n)$
+Dquad[1,1]:m$
+Dquad[2,2]:m$
+Dquad[3,3]:m$
+Dquad[4,4]:Ix$
+Dquad[5,5]:Iy$
+Dquad[6,6]:Iz$
+
+Wquad:zeromatrix(6+n,1)$
+Wquad[1,1]:(sin(psi)*sin(phi)+cos(psi)*sin(theta)*cos(phi))*U1$
+Wquad[2,1]:(-cos(psi)*sin(phi)+sin(psi)*sin(theta)*cos(phi))*U1$
+Wquad[3,1]:-m*g+cos(theta)*cos(phi)*U1$
+Wquad[4,1]:(Iy-Iz)*wy*wz+U2*la$
+Wquad[5,1]:(Iz-Ix)*wx*wz+U3*la$
+Wquad[6,1]:(Ix-Iy)*wx*wy+U4$
+
+
+Warm:fnt$
+for i:1 thru length(Xdd[1]) do
+    Warm:subst(0,Xdd[1,i],Warm)$
+
+taum:zeromatrix(6,1)$
+for i:1 thru n do
+    taum:addrow(taum,[tau_(i)])$
+W:Wquad-Warm+taum$
+D:D+Dquad$
+
+G:ratsimp(trigsimp(ratcoef(W,g)))$
+
+X:matrix()$
+X:addrow(X,[x,vx,y,vy,z,vz,phi,wx,theta,wy,psi,wz])$
+for i:1 thru n do
+(X:addcol(X,[q_(i),qd_(i)]))$
+
+
+
+
+U:matrix()$
+U:addrow(U,[U1,U2,U3,U4])$
+for i:1 thru n do
+(U:addcol(U,[tau_(i)]))$
+stringout("X.txt",X)$
+stringout("U.txt",U)$
+stringout("D.txt",D)$
+stringout("W.txt",W)$
+elapsed_real_time();
+/* [wxMaxima: input   end   ] */
+
+/* Maxima can't load/batch files which end with a comment! */
+"Created with wxMaxima"$

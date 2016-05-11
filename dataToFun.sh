@@ -1,3 +1,8 @@
+#!/bin/bash
+
+cd data/$1
+maxima --batch-string="batchload(\"../../maxima/cog_v2.wxm\")$" &&
+cd ../.. &&
 mkdir src/$1 &&
 rosrun ode_simulator symToODE data/$1 src/$1 &&
 echo "" >> CMakeLists.txt &&

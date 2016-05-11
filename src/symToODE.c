@@ -117,8 +117,8 @@ int main(int argc, const char * argv[]) {
     printf("--> Loading file: %s\n", PFile);
     MEASURE(
         SMStringEmpty(str);
-        SMStringLoadContentsOfFile(str, PFile);
-        SMContextLoadFromString(ctxt, str);
+        if(CTSuccess == SMStringLoadContentsOfFile(str, PFile))
+       		SMContextLoadFromString(ctxt, str);
     )
     
     // D file

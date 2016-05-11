@@ -1,2 +1,2 @@
 
-matrix([x,vx,y,vy,z,vz,phi,wx,theta,wy,psi,wz,q1,qd1,q2,qd2]);
+matrix([x,vx,y,vy,z,vz,phi,wx,theta,wy,psi,wz,q1,q1d,q2,q2d]);
